@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button id="reiniciarHistorial">Reiniciar Historial</button>
+
+    <div class="calculadora">
+    </div>
+    <div class="historial" id="historial">
+
+    <div class="calculator">
+        <div class="header">ESTÁNDAR</div>
+        <div class="operation" id="operation"></div>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="button operator">%</button>
+            <button class="button operator">CE</button>
+            <button class="button operator">C</button>
+            <button class="button operator">←</button>
+            <button class="button operator">¹/x</button>
+            <button class="button operator">x²</button>
+            <button class="button operator">2√x</button>
+            <button class="button operator">÷</button>
+            <button class="button">7</button>
+            <button class="button">8</button>
+            <button class="button">9</button>
+            <button class="button operator">×</button>
+            <button class="button">4</button>
+            <button class="button">5</button>
+            <button class="button">6</button>
+            <button class="button operator">-</button>
+            <button class="button">1</button>
+            <button class="button">2</button>
+            <button class="button">3</button>
+            <button class="button operator">+</button>
+            <button class="button ">±</button>
+            <button class="button">0</button>
+            <button class="button">,</button>
+            <button class="botones">=</button>
+        </div>
+    </div>
+    <div class="history" id="history">
+        <h2>Historial de Operaciones</h2>
+        <ul id="history-list"></ul>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+
+js.
+document.addEventListener('DOMContentLoaded', function () {
+    document.body.style.zoom = '80%';
+    const reiniciarHistorialBtn = document.getElementById('reiniciarHistorial');
+    
+    reiniciarHistorialBtn.addEventListener('click', function () {
+        historyList.innerHTML = '';
+    });
+    const display = document.getElementById('display');
+    const operationDisplay = document.getElementById('operation');
+    const buttons = document.querySelectorAll('.button, .botones');
+    const historyList = document.getElementById('history-list');
+    let currentInput = '0';
+    let operator = null;
+    let firstOperand = null;
+    let secondOperand = null;
+    let result = null;
+    let resetDisplay = false;
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function () {
+            const value = this.textContent;
+
+            if (value === 'C') {
+                resetCalculator();
+            } else if (value === 'CE') {
+                clearEntry();
+            } else if (value === '←') {
+                backspace();
+            } else if (value === '%') {
+                calculatePercentage();
+            } else if (value === '¹/x') {
+                calculateReciprocal();
+            } else if (value === 'x²') {
+                calculateSquare();
+            } else if (value === '2√x') {
+                calculateSquareRoot();
+            } else if (value === '±') {
+                toggleSign();
+            } else if (value === ',') {
+                addDecimalPoint();
+            } else if (isOperator(value)) {
+                handleOperator(value);
+            } else if (value === '=') {
+                calculateResult();
+            } else {
+                handleNumber(value);
+            }
+        });
+    });
+
+    function resetCalculator() {
+        currentInput = '0';
+        operator = null;
+        firstOperand = null;
+        secondOperand = null;
+        result = null;
+        resetDisplay = false;
+        updateDisplay();
+        operationDisplay.textContent = '';
+    }
+
+    function clearEntry() {
+        currentInput = '0';
+        updateDisplay();
+    }
+
+    function backspace() {
+        if (currentInput.length > 1) {
+            currentInput = currentInput.slice(0, -1);
+        } else {
+            currentInput = '0';
+        }
+        updateDisplay();
+    }
+
+    function calculatePercentage() {
+        if (currentInput !== '0') {
+            currentInput = (parseFloat(currentInput) / 100).toString();
+            updateDisplay();
+        }
+    }
+
+    function calculateReciprocal() {
+        if (currentInput !== '0') {
+            currentInput = (1 / parseFloat(currentInput)).toString();
+            updateDisplay();
+        }
+    }
+
+    function calculateSquare() {
+        currentInput = (parseFloat(currentInput) ** 2).toString();
+        updateDisplay();
+    }
+
+    function calculateSquareRoot() {
+        currentInput = (Math.sqrt(parseFloat(currentInput))).toString();
+        updateDisplay();
+    }
+
+    function toggleSign() {
+        if (currentInput !== '0') {
+            currentInput = (parseFloat(currentInput) * -1).toString();
+            updateDisplay();
+        }
+    }
+
+    function addDecimalPoint() {
+        if (!currentInput.includes(',')) {
+            currentInput += ',';
+        }
+        updateDisplay();
+    }
+
+    function isOperator(value) {
+        return value === '+' || value === '-' || value === '×' || value === '÷';
+    }
+
+    function handleOperator(op) {
+        if (operator !== null) {
+            calculateResult();
+        }
+        firstOperand = parseFloat(currentInput);
+        operator = op;
+        resetDisplay = true;
+        operationDisplay.textContent = `${firstOperand} ${operator}`;
+    }
+
+    function handleNumber(value) {
+        if (currentInput === '0' || resetDisplay) {
+            currentInput = value;
+            resetDisplay = false;
+        } else {
+            currentInput += value;
+        }
+        updateDisplay();
+    }
+
+    function calculateResult() {
+        if (operator === null || resetDisplay) {
+            return;
+        }
+        secondOperand = parseFloat(currentInput);
+        switch (operator) {
+            case '+':
+                result = firstOperand + secondOperand;
+                break;
+            case '-':
+                result = firstOperand - secondOperand;
+                break;
+            case '×':
+                result = firstOperand * secondOperand;
+                break;
+            case '÷':
+                if (secondOperand === 0) {
+                    result = 'Error';
+                } else {
+                    result = firstOperand / secondOperand;
+                }
+                break;
+        }
+        addToHistory(`${firstOperand} ${operator} ${secondOperand} = ${result}`);
+        currentInput = result.toString();
+        operator = null;
+        resetDisplay = true;
+        updateDisplay();
+        operationDisplay.textContent = '';
+    }
+
+    function updateDisplay() {
+        display.textContent = currentInput;
+    }
+
+    function addToHistory(operation) {
+        const li = document.createElement('li');
+        const date = new Date().toLocaleString();
+        li.textContent = `${date}: ${operation}`;
+        historyList.prepend(li);
+    }
+
+    resetCalculator();
+});
+
+css.
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #050505;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.calculator {
+    background-color: #1c1a1a;
+    width: 320px;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.header {
+    color: #fff;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.operation {
+    background-color: #000;
+    color: #888;
+    text-align: right;
+    font-size: 1em;
+    padding: 5px 20px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    min-height: 30px;
+}
+
+.display {
+    background-color: #000;
+    color: white;
+    text-align: right;
+    font-size: 2.5em;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    min-height: 60px;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.button {
+    background-color: #3b3a3a;
+    color: rgb(226, 220, 220);
+    border: none;
+    font-size: 1.5em;
+    border-radius: 10px;
+    padding: 20px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.button.operator {
+    background-color: #212526;
+}
+
+.botones {
+    background-color: #bb8207;
+    color: aliceblue;
+    border: none;
+    font-size: 1.5em;
+    border-radius: 10px;
+    padding: 20px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.history {
+    background-color: #1c1a1a;
+    color: #fff;
+    width: 320px;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    margin-top: 20px;
+}
+
+.history h2 {
+    margin: 0 0 10px;
+    font-size: 1.2em;
+    border-bottom: 1px solid #444;
+    padding-bottom: 10px;
+}
+
+.history ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.history ul li {
+    background-color: #2a2929;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+#reiniciarHistorial {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background-color: #bb8207;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
